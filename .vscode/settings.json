@@ -1,0 +1,7 @@
+{
+    "editor.tabSize": 2,
+    "files.insertFinalNewline": true,
+    "Lua.workspace.library": [
+        "/Users/scarecro/Documents/GitHub/typed-tabletop-simulator/packages/declaration/lua/language-server"
+    ]
+}

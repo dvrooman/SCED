@@ -4,15 +4,13 @@
     {
       "label": "Arkham SCE: Build",
       "type": "shell",
-      "command": "go",
+      "command": "TTSModManager",
       "args": [
-        "run",
-        "main.go",
-        "--moddir=${workspaceFolder}",
-        "--modfile=${env:USERPROFILE}\\Documents\\My Games\\Tabletop Simulator\\Saves\\ArkhamSCE.json"
+        "-moddir=${workspaceFolder}",
+        "-modfile=${env:HOME}/Downloads/SCEDbuild/codelab.json"
       ],
       "options": {
-        "cwd": "C:\\git\\TTSModManager"
+        // "cwd": "C:\\git\\TTSModManager"
       },
       "problemMatcher": [],
       "group": {
@@ -23,16 +21,14 @@
     {
       "label": "Arkham SCE: Decompose",
       "type": "shell",
-      "command": "go",
+      "command": "TTSModManager",
       "args": [
-        "run",
-        "main.go",
-        "--moddir=${workspaceFolder}",
-        "--modfile=${env:USERPROFILE}\\Documents\\My Games\\Tabletop Simulator\\Saves\\ArkhamSCE.json",
-        "--reverse"
+        "-moddir=${workspaceFolder}",
+        "-modfile=${env:HOME}/Downloads/codelab.json",
+        "-reverse"
       ],
       "options": {
-        "cwd": "C:\\git\\TTSModManager"
+        // "cwd": "C:\\git\\TTSModManager"
       },
       "problemMatcher": []
     }
