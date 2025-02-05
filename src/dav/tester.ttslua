@@ -1,8 +1,7 @@
 local playermatApi                = require("playermat/PlayermatApi")
 local guidReferenceApi            = require("core/GUIDReferenceApi")
-local GlobalApi                   = require("core/GlobalApi")
+-- local GlobalApi                   = require("core/GlobalApi")
 local searchLib                   = require("util/SearchLib")
-local localInvestigatorPosition = { x = -1.17, y = 1, z = -0.01 }
 
 function onLoad()
     params = {
@@ -21,45 +20,33 @@ end
 function testFunc(obj, player_clicker_color, alt_click)
     local matColor = playermatApi.getMatColorByPosition(self.getPosition())
     log("matColor: " .. matColor)
-
-    -- local playermat = guidReferenceApi.getObjectByOwnerAndType(matColor, "Playermat")
-    local playermat = playermatApi.getMatForColor(matColor)
-    log("playermat: ")
-    log(playermat)
     
-    local obj = guidReferenceApi.getObjectByOwnerAndType(matColor, "InvestigatorSpecifics")
-    log("investigator specifics: ")
-    log(obj)
+    local mat = guidReferenceApi.getObjectByOwnerAndType(matColor, "Playermat")
+    -- local playermat = playermatApi.getMatForColor("White") -- no idea why this doesn't work
+    log("playermat: ")
+    log(mat)
+    
+    local localInvestigatorPosition = { x = -1.17, y = 1, z = -0.01 } -- stolen from PlayermatApi
+    local searchPos = mat.positionToWorld(localInvestigatorPosition)
+    local searchResult = searchLib.atPosition(searchPos, "isCardOrDeck")
+    local invest
+    if #searchResult == 1 then
+        invest = searchResult[1]
+    else
+        printToAll("Error: Could not find investigator", {1, 0, 0})
+        return -- nothing else we can do without an investigator loaded
+    end
 
-    local iData = playermatApi.getActiveInvestigatorData(matColor)
-    log("active investigator data: ")
-    log(iData)
-    -- for _, obj in ipairs(playAreaZone.getObjects()) do
-    --     if obj.hasTag("Minicard") and not obj.is_face_down then
-    --       local md = JSON.decode(obj.getGMNotes()) or {}
-    --       if md.id == investigatorData.miniId then return true end
-    --     end
-    -- end
+    local md = JSON.decode(invest.getGMNotes()) or {}
+    log("md:")
+    log(md)
 
-    -- -- nope
-    -- local i2 = guidReferenceApi.getObjectByOwnerAndType(matColor, "Investigator")
-    -- log("investigator2: ")
-    -- log(i2)
-
-    -- local mat = playermatApi.getMa
-    -- for _, mat in pairs(getMatForColor(matColor)) do
-    --     log("mat: ")
-    --     log(mat)
-
-    --     local searchPos = mat.positionToWorld(localInvestigatorPosition)
-    --     log("searchPos: ")
-    --     log(searchPos)
-
-    --     local searchResult = searchLib.atPosition(searchPos, "isCardOrDeck")
-    --     if #searchResult == 1 then
-    --     return searchResult[1].getName()
-    --     end
-    -- end
+    -- ownedObjects.InvestigatorSkillTracker.call("updateStats", {
+    --     md.willpowerIcons,
+    --     md.intellectIcons,
+    --     md.combatIcons,
+    --     md.agilityIcons
+    --   })
 
 
 end
