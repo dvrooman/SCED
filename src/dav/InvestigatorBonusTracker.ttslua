@@ -1,0 +1,170 @@
+local guidReferenceApi            = require("core/GUIDReferenceApi")
+local playermatApi                = require("playermat/PlayermatApi")
+local searchLib                   = require("util/SearchLib")
+
+local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+
+local descriptionHand = "Uses hand size + bonuses to set your Investigator Skill Tracker numbers.\n\nContext menu has options to reset bonuses or use core stats instead of hand size."
+local descriptionInvestigator = "Uses Investigator stats + bonuses to set your Investigator Skill Tracker numbers.\n\nContext menu has options to reset bonuses or use hand size instead of core stats."
+local tipHand = "Hand Size + Bonuses"
+local tipInvestigator = "Investigator + Bonuses"
+
+local buttonParameters = { -- for the 4 buttons
+  function_owner = self,
+  height         = 510,
+  width          = 630,
+  position       = { x = -3.9, y = 0.1, z = 0.35 },
+  color          = { 0, 0, 0, 0 },
+  font_color     = { 0, 0, 0, 100 },
+  font_size      = 400,
+}
+
+local updateButtonParams = { -- for the "Update Skill Tracker" button
+  function_owner = self,
+  height         = 310,
+  width          = 2250,
+  position       = { x = 0.0, y = 0.1, z = -0.54 },
+  color          = { 0, 0, 0, 0 },
+  font_color     = { 0, 0, 0, 100 },
+  font_size      = 400,
+  click_function = "updateSkillTracker",
+  tooltip        = tipInvestigator,
+}
+
+function updateSave()
+  self.script_state = JSON.encode(stats)
+end
+
+-- load stats and make buttons (left to right)
+function onLoad(savedData)
+  if savedData and savedDatapp ~= "" then
+    stats = JSON.decode(savedData) or { 0, 0, 0, 0 }
+  end
+  
+  for index = 1, 4 do -- buttons for each stat bonus
+    local fnName = "buttonClick" .. index
+    _G[fnName] = function(_, _, isRightClick) buttonClick(isRightClick, index) end
+    buttonParameters.click_function = fnName
+    buttonParameters.position.x = buttonParameters.position.x + 1.57
+    self.createButton(buttonParameters)
+    updateButtonLabel(index)
+  end
+  self.createButton(updateButtonParams) -- button to update the skill tracker
+  
+  self.addContextMenuItem("Use Hand Size", useHandSize)
+  addResetContextuals() -- menus to reset to 0s or -1s
+
+  self.setDescription(descriptionInvestigator)
+end
+
+-- update 4 modifier stats
+function buttonClick(isRightClick, index)
+  stats[index] = math.min(math.max(stats[index] + (isRightClick and -1 or 1), -99), 99)
+  updateSave()
+  updateButtonLabel(index)
+end
+
+-- sync the button label to the internal value
+function updateButtonLabel(index)
+  local fontSize = buttonParameters.font_size
+  local whitespace = "   "
+
+  if stats[index] > 9 or stats[index] < 0 then
+    fontSize = buttonParameters.font_size * 0.65
+    whitespace = "     "
+  end
+
+  self.editButton({ index = index - 1, label = stats[index] .. whitespace, font_size = fontSize })
+end
+
+-- update the stats to the provided values
+---@param newStats table Contains the new values for the stats: {Willpower, Intellect, Fight, Agility}
+function updateStats(newStats)
+  if newStats and #newStats == 4 then
+    stats = newStats
+
+    for i = 1, 4 do updateButtonLabel(i) end
+    updateSave()
+  elseif newStats then
+    printToAll("Provided new stats are incomplete or incorrectly formatted.", "Red")
+  end
+end
+
+-- swap contextual menu/tags between hand size and investigator stats
+function useHandSize()
+  -- ### NEED TO change the label on the button as well. probably destroy it and recreate?
+  self.clearContextMenu()
+  if self.hasTag("UseHandSize") then -- set up to use bonuses only
+      self.removeTag("UseHandSize")
+      self.addContextMenuItem("Use Hand Size", useHandSize)
+      self.setDescription(descriptionInvestigator)
+      self.editButton({ index = 4, tooltip = tipInvestigator })
+    else
+      self.addTag("UseHandSize") -- set up to use hand size
+      self.addContextMenuItem("Use Investigator", useHandSize)
+      self.setDescription(descriptionHand)
+      self.editButton({ index = 4, tooltip = tipHand })
+  end
+  addResetContextuals() -- menus to reset to 0s or -1s
+end
+
+function tablelength(T) -- to help counting hand size
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
+
+function updateSkillTracker(obj, player_clicker_color, alt_click)
+  local ownedObjects                = {}
+  ownedObjects = guidReferenceApi.getObjectsByOwner(matColor)
+  local skillTracker = ownedObjects.InvestigatorSkillTracker
+  -- local skillTracker = guidReferenceApi.getObjectsByOwner(matColor).skillTracker -- this doesn't work, thought i could be fancy
+
+  local newStats = skillTracker.getVar("stats") -- initialize by copying the current skill tracker stats
+  local modifiers = self.getVar("stats")
+
+  if self.hasTag("UseHandSize") then -- use hand size + bonuses
+    local handCount = tablelength(Player[matColor].getHandObjects())
+    if handCount > 5 then handCount = 5 end -- Shattered Self maxes at 5
+
+    for i = 1, 4 do
+      newStats[i] = handCount + modifiers[i]
+    end
+
+  else -- use investigator stats + bonuses
+    newStats = getInvestigatorStats()
+
+    for i = 1, 4 do
+      newStats[i] = newStats[i] + modifiers[i]
+    end
+  end
+  
+  skillTracker.call("updateStats", newStats) -- display results
+end
+
+function getInvestigatorStats()
+  -- local mat = playermatApi.getMatForColor("White") -- no idea why this doesn't work
+  local mat = guidReferenceApi.getObjectByOwnerAndType(matColor, "Playermat")
+  
+  local localInvestigatorPosition = { x = -1.17, y = 1, z = -0.01 } -- stolen from PlayermatApi
+  local searchPos = mat.positionToWorld(localInvestigatorPosition)
+  local searchResult = searchLib.atPosition(searchPos, "isCardOrDeck")
+  local invest
+  if #searchResult == 1 then
+      invest = searchResult[1]
+  else
+      printToAll("Error: Could not find investigator", {1, 0, 0})
+      return -- nothing else we can do without an investigator loaded
+  end
+
+  local md = JSON.decode(invest.getGMNotes()) or {}
+
+  local investigatorStats = { md.willpowerIcons, md.intellectIcons, md.combatIcons, md.agilityIcons }
+
+  return investigatorStats
+end
+
+function addResetContextuals()
+  self.addContextMenuItem("Reset to 0s", function() updateStats({ 0, 0, 0, 0 }) end)
+  self.addContextMenuItem("Set to -1s", function() updateStats({ -1, -1, -1, -1 }) end)
+end
