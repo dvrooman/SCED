@@ -5,31 +5,32 @@
     "z": 0
   },
   "Autoraise": true,
-  "CardID": 271720,
+  "CardID": 540241,
   "ColorDiffuse": {
     "b": 0.71324,
     "g": 0.71324,
     "r": 0.71324
   },
+  "ContainedObjects_path": "ShatteredSelf.3551fb",
   "CustomDeck": {
-    "2717": {
+    "5402": {
       "BackIsHidden": true,
-      "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/1011562618093845464/80687C9319FA2015F3D9F7CBEB4C55FBF045B27D/",
-      "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/1011562618093845971/A678BD374EC4DE672206B5EF7EB57DC885BC839C/",
-      "NumHeight": 7,
-      "NumWidth": 10,
+      "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2453969772006055371/DEA899F42BF11E62836A1F08EFAAB2137738CDAB/",
+      "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2453969772006054449/E3F361172C58FB357238946B925502E17BB411F3/",
+      "NumHeight": 6,
+      "NumWidth": 9,
       "Type": 0,
       "UniqueBack": true
     }
   },
-  "Description": "The Haunted",
+  "Description": "Who Are You?",
   "DragSelectable": true,
-  "GMNotes_path": "CalvinWright.b02a1e.gmnotes",
-  "GUID": "b02a1e",
+  "GMNotes_path": "ShatteredSelf.3551fb.gmnotes",
+  "GUID": "3551fb",
   "Grid": true,
   "GridProjection": false,
   "Hands": true,
-  "HideWhenFaceDown": false,
+  "HideWhenFaceDown": true,
   "IgnoreFoW": false,
   "LayoutGroupSortIndex": 0,
   "Locked": false,
@@ -37,9 +38,12 @@
   "LuaScriptState": "",
   "MeasureMovement": false,
   "Name": "Card",
-  "Nickname": "Calvin Wright",
+  "Nickname": "Shattered Self",
   "SidewaysCard": true,
   "Snap": true,
+  "States_path": {
+    "2": "OldMemory.67734d"
+  },
   "Sticky": true,
   "Tags": [
     "Investigator",
@@ -47,9 +51,9 @@
   ],
   "Tooltip": true,
   "Transform": {
-    "posX": -43.463,
+    "posX": -43.468,
     "posY": 1.534,
-    "posZ": 9.54,
+    "posZ": 5.912,
     "rotX": 0,
     "rotY": 180,
     "rotZ": 0,

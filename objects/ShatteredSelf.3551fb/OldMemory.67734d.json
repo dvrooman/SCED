@@ -5,30 +5,30 @@
     "z": 0
   },
   "Autoraise": true,
-  "CardID": 261820,
+  "CardID": 540141,
   "ColorDiffuse": {
     "b": 0.71324,
     "g": 0.71324,
     "r": 0.71324
   },
   "CustomDeck": {
-    "2618": {
+    "5401": {
       "BackIsHidden": true,
-      "BackURL": "https://i.imgur.com/vB84qMp.jpg",
-      "FaceURL": "https://i.imgur.com/WPYBga4.jpg",
-      "NumHeight": 3,
-      "NumWidth": 7,
+      "BackURL": "https://steamusercontent-a.akamaihd.net/ugc/2453969772006055371/DEA899F42BF11E62836A1F08EFAAB2137738CDAB/",
+      "FaceURL": "https://steamusercontent-a.akamaihd.net/ugc/2453969772006054449/E3F361172C58FB357238946B925502E17BB411F3/",
+      "NumHeight": 6,
+      "NumWidth": 9,
       "Type": 0,
       "UniqueBack": true
     }
   },
-  "Description": "",
+  "Description": "Remnant of Humanity",
   "DragSelectable": true,
-  "GMNotes": "{\n  \"id\": \"04005-m\",\n  \"type\": \"Minicard\"\n}",
-  "GUID": "510d45",
+  "GMNotes": "",
+  "GUID": "67734d",
   "Grid": true,
   "GridProjection": false,
-  "Hands": false,
+  "Hands": true,
   "HideWhenFaceDown": false,
   "IgnoreFoW": false,
   "LayoutGroupSortIndex": 0,
@@ -37,24 +37,21 @@
   "LuaScriptState": "",
   "MeasureMovement": false,
   "Name": "Card",
-  "Nickname": "Calvin Wright",
+  "Nickname": "Old Memory",
   "SidewaysCard": false,
-  "Snap": false,
+  "Snap": true,
   "Sticky": true,
-  "Tags": [
-    "Minicard"
-  ],
   "Tooltip": true,
   "Transform": {
-    "posX": -41.15,
-    "posY": 1.534,
-    "posZ": 10.703,
-    "rotX": 0,
-    "rotY": 270,
+    "posX": -6.162,
+    "posY": 1.617,
+    "posZ": 12.317,
+    "rotX": 359,
+    "rotY": 180,
     "rotZ": 0,
-    "scaleX": 0.6,
+    "scaleX": 1,
     "scaleY": 1,
-    "scaleZ": 0.6
+    "scaleZ": 1
   },
   "Value": 0,
   "XmlUI": ""

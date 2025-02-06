@@ -2,6 +2,7 @@ local playermatApi                = require("playermat/PlayermatApi")
 local guidReferenceApi            = require("core/GUIDReferenceApi")
 -- local GlobalApi                   = require("core/GlobalApi")
 local searchLib                   = require("util/SearchLib")
+local zones                       = require("playermat/Zones")
 
 function onLoad()
     params = {
@@ -18,35 +19,60 @@ function onLoad()
 end
 
 function testFunc(obj, player_clicker_color, alt_click)
-    local matColor = playermatApi.getMatColorByPosition(self.getPosition())
-    log("matColor: " .. matColor)
+  local matColor = playermatApi.getMatColorByPosition(self.getPosition())  
     
+    getInvestigatorStats()
+
+
     -- local mat = guidReferenceApi.getObjectByOwnerAndType(matColor, "Playermat")
-    local mat = playermatApi.getMatForColor(matColor) -- no idea why this doesn't work
-    log("playermat: ")
-    log(mat)
-    
-    -- local localInvestigatorPosition = { x = -1.17, y = 1, z = -0.01 } -- stolen from PlayermatApi
-    -- local searchPos = mat.positionToWorld(localInvestigatorPosition)
-    -- local searchResult = searchLib.atPosition(searchPos, "isCardOrDeck")
-    -- local invest
-    -- if #searchResult == 1 then
-    --     invest = searchResult[1]
-    -- else
-    --     printToAll("Error: Could not find investigator", {1, 0, 0})
-    --     return -- nothing else we can do without an investigator loaded
-    -- end
+    -- log("playermat: ")
+    -- log(mat)
 
-    -- local md = JSON.decode(invest.getGMNotes()) or {}
-    -- log("md:")
-    -- log(md)
+    -- local damage = playermatApi.getCounterValue(matColor, "DamageCounter")
+    -- local horror = playermatApi.getCounterValue(matColor, "HorrorCounter")
+    -- log("damage: " .. damage)
+    -- log("horror: " .. horror)
 
-    -- ownedObjects.InvestigatorSkillTracker.call("updateStats", {
-    --     md.willpowerIcons,
-    --     md.intellectIcons,
-    --     md.combatIcons,
-    --     md.agilityIcons
-    --   })
+    -- local investigatorName = playermatApi.getInvestigatorName(matColor)
+    -- log("investigatorName: " .. investigatorName)
 
+    -- local stats = getInvestigatorStats()
+    -- log("stats: ")
+    -- log(stats)
+end
 
+function getInvestigatorStats()
+  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+  log("matColor: " .. matColor)
+
+  -- orig
+  local localInvestigatorPosition = { x = -1.17, y = 1, z = -0.01 } -- stolen from PlayermatApi
+  local mat = guidReferenceApi.getObjectByOwnerAndType(matColor, "Playermat")  
+  local searchPos = mat.positionToWorld(localInvestigatorPosition)
+  log("searchPos: ")
+  log(searchPos)
+  -- orig
+  
+  local pos = zones.getZonePosition(matColor, "Investigator")
+  log("pos: ")
+  log(pos)
+
+  -- local searchResult = searchLib.atPosition(searchPos, "isCardOrDeck")
+  local searchResult = searchLib.atPosition(pos, "isCardOrDeck")
+  log("searchResult: ")
+  log(searchResult)
+
+  local invest
+  if #searchResult == 1 then
+      invest = searchResult[1]
+  else
+      return -- nothing else we can do without an investigator loaded
+  end
+  log(invest)
+
+  -- local md = JSON.decode(invest.getGMNotes()) or {}
+
+  -- local investigatorStats = { md.willpowerIcons, md.intellectIcons, md.combatIcons, md.agilityIcons }
+
+  -- return investigatorStats
 end
