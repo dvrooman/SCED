@@ -12,20 +12,20 @@
   },
   "CustomImage": {
     "CustomToken": {
-      "MergeDistancePixels": 10,
+      "MergeDistancePixels": 5,
       "Stackable": false,
       "StandUp": false,
       "Thickness": 0.1
     },
     "ImageScalar": 1,
     "ImageSecondaryURL": "",
-    "ImageURL": "https://steamusercontent-a.akamaihd.net/ugc/24308212286123303/B181ADB5993A211E84012069DA254316034F0CFD/",
+    "ImageURL": "https://steamusercontent-a.akamaihd.net/ugc/24308846259511322/78CC899A05C113B25A1230477CCAEFD6C9E998DB/",
     "WidthScale": 0
   },
-  "Description": "testy mc tester",
+  "Description": "Uses Investigator stats + bonuses to set your Investigator Skill Tracker numbers.\n\nSee context menu for additional options.",
   "DragSelectable": true,
   "GMNotes": "",
-  "GUID": "ac0fd0",
+  "GUID": "db1469",
   "Grid": true,
   "GridProjection": false,
   "Hands": false,
@@ -33,24 +33,28 @@
   "IgnoreFoW": false,
   "LayoutGroupSortIndex": 0,
   "Locked": false,
-  "LuaScript": "require(\"dav/tester\")",
-  "LuaScriptState": "",
+  "LuaScript": "require(\"playermat/NewInvestigatorBonusTracker\")",
+  "LuaScriptState": "[0,0,0,0]",
   "MeasureMovement": false,
   "Name": "Custom_Token",
-  "Nickname": "zz tester",
+  "Nickname": "New Investigator Bonus Tracker",
   "Snap": true,
   "Sticky": true,
+  "Tags": [
+    "CleanUpHelper_ignore",
+    "displacement_excluded"
+  ],
   "Tooltip": true,
   "Transform": {
-    "posX": -43.558,
-    "posY": 1.57,
-    "posZ": 14.779,
+    "posX": -47.712,
+    "posY": 1.531,
+    "posZ": 14.092,
     "rotX": 0,
     "rotY": 270,
     "rotZ": 0,
-    "scaleX": 1,
+    "scaleX": 0.51,
     "scaleY": 1,
-    "scaleZ": 1
+    "scaleZ": 0.51
   },
   "Value": 0,
   "XmlUI": ""

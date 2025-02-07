@@ -4,7 +4,6 @@ local searchLib                   = require("util/SearchLib")
 local zones                       = require("playermat/Zones")
 
 local description = "Uses Investigator stats + bonuses to set your Investigator Skill Tracker numbers.\n\nSee context menu for additional options."
-local tip = "Update Skill Tracker"
 
 local buttonParameters = { -- for the 4 buttons
   function_owner = self,
@@ -18,14 +17,14 @@ local buttonParameters = { -- for the 4 buttons
 
 local updateButtonParams = { -- for the "Update Skill Tracker" button
   function_owner = self,
-  height         = 310,
-  width          = 2250,
-  position       = { x = 0.0, y = 0.1, z = -0.54 },
+  height         = 600,
+  width          = 600,
+  position       = { x = -0.0, y = 0.1, z = 0.0 },
   color          = { 0, 0, 0, 0 },
   font_color     = { 0, 0, 0, 100 },
   font_size      = 400,
   click_function = "updateSkillTracker",
-  tooltip        = tip,
+  tooltip        = "Update Skill Tracker",
 }
 
 function updateSave()
@@ -42,7 +41,28 @@ function onLoad(savedData)
     local fnName = "buttonClick" .. index
     _G[fnName] = function(_, _, isRightClick) buttonClick(isRightClick, index) end
     buttonParameters.click_function = fnName
-    buttonParameters.position.x = buttonParameters.position.x + 1.57
+
+    local baseX = -1.0
+    local baseZ = 0.75
+    local offsetX = 1.87
+    -- buttonParameters.position.x = buttonParameters.position.x + 1.57
+    if index == 1 then -- willpower
+      buttonParameters.position.x = baseX
+      buttonParameters.position.z = baseZ * -1
+      
+    elseif index == 2 then -- intellect
+      buttonParameters.position.x = baseX + offsetX
+      buttonParameters.position.z = baseZ * -1
+      
+    elseif index == 3 then -- fight
+      buttonParameters.position.x = baseX
+      buttonParameters.position.z = baseZ
+      
+    else -- agility
+      buttonParameters.position.x = baseX + offsetX
+      buttonParameters.position.z = baseZ
+
+    end
     self.createButton(buttonParameters)
     updateButtonLabel(index)
   end

@@ -238,11 +238,12 @@
     "Neutral.f94579",
     "CardBackEnhancer.87450c",
     "NightofVespers-CampaignExpansion.ad4df7",
-    "zztester.ac0fd0",
     "InvestigatorBonusTracker.073576",
     "CalvinWright.b02a1e",
     "CalvinWright.510d45",
-    "ShatteredSelf.3551fb"
+    "ShatteredSelf.3551fb",
+    "zztester.ac0fd0",
+    "NewInvestigatorBonusTracker.db1469"
   ],
   "PlayArea": 1,
   "PlayerCounts": [
