@@ -1,0 +1,191 @@
+-- InvestigatorBonusTracker
+-- based on InvestigatorSkillTracker
+
+local guidReferenceApi            = require("core/GUIDReferenceApi")
+local playermatApi                = require("playermat/PlayermatApi")
+local searchLib                   = require("util/SearchLib")
+local zones                       = require("playermat/Zones")
+
+local description = "Uses Investigator stats + bonuses to set your Investigator Skill Tracker numbers.\n\nSee context menu for additional options."
+
+local buttonParameters = { -- for the 4 buttons
+  function_owner = self,
+  height         = 510,
+  width          = 630,
+  position       = { x = -3.9, y = 0.1, z = 0.35 },
+  color          = { 0, 0, 0, 0 },
+  font_color     = { 0, 0, 0, 100 },
+  font_size      = 400,
+}
+
+local updateButtonParams = { -- for the "Update Skill Tracker" button
+  function_owner = self,
+  height         = 600,
+  width          = 600,
+  position       = { x = -0.0, y = 0.1, z = 0.0 },
+  color          = { 0, 0, 0, 0 },
+  font_color     = { 0, 0, 0, 100 },
+  font_size      = 400,
+  click_function = "updateSkillTracker",
+  tooltip        = "Update Skill Tracker",
+}
+
+function updateSave()
+  self.script_state = JSON.encode(stats)
+end
+
+-- load stats and make buttons (left to right, top to bottom)
+function onLoad(savedData)
+  if savedData and savedData ~= "" then
+    stats = JSON.decode(savedData) or { 0, 0, 0, 0 }
+  end
+  
+  for index = 1, 4 do -- buttons for each stat bonus
+    local fnName = "buttonClick" .. index
+    _G[fnName] = function(_, _, isRightClick) buttonClick(isRightClick, index) end
+    buttonParameters.click_function = fnName
+
+    local baseX = -1.0
+    local baseZ = 0.75
+    local offsetX = 1.87
+    -- buttonParameters.position.x = buttonParameters.position.x + 1.57
+    if index == 1 then -- willpower
+      buttonParameters.position.x = baseX
+      buttonParameters.position.z = baseZ * -1
+      
+    elseif index == 2 then -- intellect
+      buttonParameters.position.x = baseX + offsetX
+      buttonParameters.position.z = baseZ * -1
+      
+    elseif index == 3 then -- fight
+      buttonParameters.position.x = baseX
+      buttonParameters.position.z = baseZ
+      
+    else -- agility
+      buttonParameters.position.x = baseX + offsetX
+      buttonParameters.position.z = baseZ
+
+    end
+    self.createButton(buttonParameters)
+    updateButtonLabel(index)
+  end
+
+  self.createButton(updateButtonParams) -- button to update the skill tracker
+  addResetContextuals() -- menus to reset to 0s or -1s
+  self.setDescription(description)
+end
+
+-- update 4 modifier stats
+function buttonClick(isRightClick, index)
+  stats[index] = math.min(math.max(stats[index] + (isRightClick and -1 or 1), -99), 99)
+  updateSave()
+  updateButtonLabel(index)
+end
+
+-- sync the button label to the internal value
+function updateButtonLabel(index)
+  local fontSize = buttonParameters.font_size
+  local whitespace = "   "
+
+  if stats[index] > 9 or stats[index] < 0 then
+    fontSize = buttonParameters.font_size * 0.65
+    whitespace = "     "
+  end
+
+  self.editButton({ index = index - 1, label = stats[index] .. whitespace, font_size = fontSize })
+end
+
+-- update the stats to the provided values
+---@param newStats table Contains the new values for the stats: {Willpower, Intellect, Fight, Agility}
+function updateStats(newStats)
+  if newStats and #newStats == 4 then
+    stats = newStats
+
+    for i = 1, 4 do updateButtonLabel(i) end
+    updateSave()
+  elseif newStats then
+    printToAll("Provided new stats are incomplete or incorrectly formatted.", "Red")
+  end
+end
+
+function updateSkillTracker(obj, player_clicker_color, alt_click)
+  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+
+  local bonuses = self.getVar("stats") -- bonuses from this object
+  local modifiers = { 0, 0, 0, 0 } -- modifiers from specific investigators
+  local finalStats = getInvestigatorStats()   -- stats to be applied to the InvestigatorSkillTracker (start with the investigator stats)
+  if finalStats == nil then -- no investigator loaded, can't proceed
+    printToAll("Error: " .. matColor .. " Bonus Tracker - No investigator loaded.", "Red")
+    return
+  end
+
+  local investigatorName = playermatApi.getInvestigatorName(matColor)
+  if investigatorName == "Shattered Self" then -- Shattered Self maxes at 5
+    local handSize = getHandSize()
+    for i = 1, 4 do
+      modifiers[i] = handSize
+    end
+
+  elseif investigatorName == "Calvin Wright" then -- bonuses bsed on damage and horror
+    local damage = playermatApi.getCounterValue(matColor, "DamageCounter")
+    local horror = playermatApi.getCounterValue(matColor, "HorrorCounter")
+    modifiers[1] = horror -- Willpower
+    modifiers[2] = horror -- Intellect
+    modifiers[3] = damage -- Combat
+    modifiers[4] = damage -- Agility
+
+  else
+    -- no other known modifiers for now
+  end
+  
+  for i = 1, 4 do -- add in bonuses and modifiers
+    finalStats[i] = finalStats[i] + bonuses[i] + modifiers[i]
+    if finalStats[i] < 0 then finalStats[i] = 0 end
+  end
+  
+  -- display the new stats on the InvestigatorSkillTracker
+  local ownedObjects = {}
+  ownedObjects = guidReferenceApi.getObjectsByOwner(matColor)
+  local skillTracker = ownedObjects.InvestigatorSkillTracker
+  skillTracker.call("updateStats", finalStats)
+end
+
+
+function getInvestigatorStats()
+  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+  local pos = zones.getZonePosition(matColor, "Investigator")
+  local searchResult = searchLib.atPosition(pos, "isCardOrDeck")
+  local invest
+  if #searchResult == 1 then
+      invest = searchResult[1]
+  else
+      return -- nothing else we can do without an investigator loaded
+  end
+
+  local md = JSON.decode(invest.getGMNotes()) or {}
+
+  local investigatorStats = { md.willpowerIcons, md.intellectIcons, md.combatIcons, md.agilityIcons }
+
+  return investigatorStats
+end
+
+function getHandSize()
+  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+  local handSize = tablelength(Player[matColor].getHandObjects())
+  if playermatApi.getInvestigatorName(matColor) == "Shattered Self" then
+    if handSize > 5 then handSize = 5 end -- Shattered Self maxes at 5
+  end
+  return handSize
+end
+
+-- to help counting hand size
+function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
+
+function addResetContextuals()
+  self.addContextMenuItem("Reset to 0s", function() updateStats({ 0, 0, 0, 0 }) end)
+  self.addContextMenuItem("Set to -1s", function() updateStats({ -1, -1, -1, -1 }) end)
+end
