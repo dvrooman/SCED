@@ -27,7 +27,8 @@
     "AllEncounterCards.aa12bb",
     "Auto-failCounter.a9a321",
     "ElderSignCounter.e62cb5",
-    "DoomCounterBag.a82b88"
+    "DoomCounterBag.a82b88",
+    "InvestigatorBonusTrackerBag.caf9ac"
   ],
   "ContainedObjects_path": "Fan-MadeAccessories.aa8b38",
   "CustomMesh": {
