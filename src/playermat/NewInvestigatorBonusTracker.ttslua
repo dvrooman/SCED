@@ -188,23 +188,31 @@ end
 
 -- get mat color based on closest mat to corner of helper
 function getMatColor()
-  -- local matColor = playermatApi.getMatColorByPosition(self.getPosition())
   local matColor = playermatApi.getMatColorByPosition(getBottomLeftCorner(self))
-
-  log("matColor: " .. matColor)
   return matColor
 end
 
--- get bottom left corner of object for searching
+-- get bottom left corner of object for searching (otherwise we might get the wrong mat)
 function getBottomLeftCorner(object)
   local pos = object.getPosition()
-  log("blc orig pos: " .. tostring(pos))
-  log("blc size: " .. tostring(object.getBounds().size))
-  local bounds = object.getBounds()
-  pos.x = pos.x + (bounds.size.x / -2)
-  -- leave y alone
-  pos.z = pos.z + (bounds.size.z / 2)
+  local bounds = object.getBoundsNormalized() -- these don't change with rotation
+  local right = bounds.size.x / 2
+  local forward = bounds.size.z / 2
+
+  local transForward = object.getTransformForward()
+  local transRight = object.getTransformRight()
+  -- forward
+  local newPos = { 
+    x = pos.x + transForward.x * forward,
+    y = pos.y + transForward.y * forward,
+    z = pos.z + transForward.z * forward,
+  }
+  -- right
+  newPos = { 
+    x = newPos.x + transRight.x * right,
+    y = newPos.y + transRight.y * right,
+    z = newPos.z + transRight.z * right,
+  }
   
-  log("blc corner pos: " .. tostring(pos))
-  return pos
+  return newPos
 end
