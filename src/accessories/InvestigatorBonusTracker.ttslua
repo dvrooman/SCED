@@ -6,12 +6,6 @@ local playermatApi                = require("playermat/PlayermatApi")
 local searchLib                   = require("util/SearchLib")
 local zones                       = require("playermat/Zones")
 
--- Convenience function to look up closest mat object's color.
--- Uses helper's bottom left corner of (going from center can get wrong mat)
-local function getMatColor()
-  return playermatApi.getMatColorByPosition(getBottomLeftCorner(self))
-end
-
 local description = "Uses Investigator stats + bonuses to set your Investigator Skill Tracker numbers.\n\nSee context menu for additional options."
 
 local buttonParameters = { -- for the 4 buttons
@@ -75,10 +69,16 @@ function onLoad(savedData)
     self.createButton(buttonParameters)
     updateButtonLabel(index)
   end
-
+  
   self.createButton(updateButtonParams) -- button to update the skill tracker
   addResetContextuals() -- menus to reset to 0s or -1s
   self.setDescription(description)
+end
+
+-- contextual menu for helper
+function addResetContextuals()
+  self.addContextMenuItem("Reset to 0s", function() updateStats({ 0, 0, 0, 0 }) end)
+  self.addContextMenuItem("Set to -1s", function() updateStats({ -1, -1, -1, -1 }) end)
 end
 
 -- update 4 modifier stats
@@ -114,11 +114,9 @@ function updateStats(newStats)
   end
 end
 
--- update investigator's Skill Tracker to include bonuses
+-- update InvestigatorSkillTracker with core stats + bonuses
 function updateSkillTracker(obj, player_clicker_color, alt_click)
-  -- local matColor = playermatApi.getMatColorByPosition(self.getPosition())
   local matColor = getMatColor()
-
   local bonuses = self.getVar("stats") -- bonuses from this object
   local modifiers = { 0, 0, 0, 0 } -- modifiers from specific investigators
   local finalStats = getInvestigatorStats()   -- stats to be applied to the InvestigatorSkillTracker (start with the investigator stats)
@@ -129,7 +127,8 @@ function updateSkillTracker(obj, player_clicker_color, alt_click)
 
   local investigatorName = playermatApi.getInvestigatorName(matColor)
   if investigatorName == "Shattered Self" then -- Shattered Self maxes at 5
-    local handSize = getHandSize()
+    local handSize = #Player[matColor].getHandObjects()
+    if handSize > 5 then handSize = 5 end
     for i = 1, 4 do
       modifiers[i] = handSize
     end
@@ -158,68 +157,17 @@ function updateSkillTracker(obj, player_clicker_color, alt_click)
   skillTracker.call("updateStats", finalStats)
 end
 
+---------------------------------------------------------
+-- utility functions
+---------------------------------------------------------
 
-
-function addResetContextuals()
-  self.addContextMenuItem("Reset to 0s", function() updateStats({ 0, 0, 0, 0 }) end)
-  self.addContextMenuItem("Set to -1s", function() updateStats({ -1, -1, -1, -1 }) end)
-end
-
-------------------------------
---- helpers
-------------------------------
-
--- get hand size accounting that shattered self maxes at 5 regarless of actual card count
-function getHandSize()
-  -- local matColor = playermatApi.getMatColorByPosition(self.getPosition())
-  -- local handSize = tablelength(Player[matColor].getHandObjects())
-  local matColor = getMatColor()
-  local handSize = 0
-  for _ in pairs(Player[matColor].getHandObjects()) do
-    handSize = handSize + 1
-  end
-
-  if playermatApi.getInvestigatorName(matColor) == "Shattered Self" then
-    if handSize > 5 then handSize = 5 end -- Shattered Self maxes at 5
-  end
-  return handSize
-end
-
--- -- to help counting hand size
--- function tablelength(T)
---   local count = 0
---   -- for _ in pairs(T) do count = count + 1 end
---   for _ in pairs(T) do
---     count = count + 1
---   end
---   return count
--- end
-
-function getInvestigatorStats()
-  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
-  local pos = zones.getZonePosition(matColor, "Investigator")
-  local searchResult = searchLib.atPosition(pos, "isCardOrDeck")
-  local invest
-  if #searchResult == 1 then
-      invest = searchResult[1]
-  else
-      return -- nothing else we can do without an investigator loaded
-  end
-
-  local md = JSON.decode(invest.getGMNotes()) or {}
-
-  local investigatorStats = { md.willpowerIcons, md.intellectIcons, md.combatIcons, md.agilityIcons }
-
-  return investigatorStats
-end
-
--- get bottom left corner of object
+-- get bottom left corner of object for searching
 function getBottomLeftCorner(object)
   local pos = object.getPosition()
   local bounds = object.getBoundsNormalized() -- these don't change with rotation
   local right = bounds.size.x / 2
   local forward = bounds.size.z / 2
-  
+
   local transForward = object.getTransformForward()
   local transRight = object.getTransformRight()
   -- forward
@@ -235,9 +183,32 @@ function getBottomLeftCorner(object)
     z = newPos.z + transRight.z * right,
   }
   
-  local pingPlayer = Player.getPlayers()[1]
-  pingPlayer.pingTable(pos)
-  pingPlayer.pingTable(newPos)
-
   return newPos
+end
+
+function getInvestigatorStats()
+  local matColor = getMatColor()
+  local pos = zones.getZonePosition(matColor, "Investigator")
+  
+  local searchResult = searchLib.atPosition(pos, "isCardOrDeck")
+  local invest
+  if #searchResult == 1 then
+    invest = searchResult[1]
+  else
+    return -- nothing else we can do without an investigator loaded
+  end
+  
+  local md = JSON.decode(invest.getGMNotes()) or {}
+  
+  local investigatorStats = { md.willpowerIcons, md.intellectIcons, md.combatIcons, md.agilityIcons }
+  
+  return investigatorStats
+end
+
+-- get mat color based on closest mat to corner of helper
+-- need to use the corner otherwise green mat will return white mat if
+--    the helper is in the top right corner (near the trash)
+function getMatColor()
+  local matColor = playermatApi.getMatColorByPosition(getBottomLeftCorner(self))
+  return matColor
 end
