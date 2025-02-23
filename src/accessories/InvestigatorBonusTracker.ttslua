@@ -6,6 +6,12 @@ local playermatApi                = require("playermat/PlayermatApi")
 local searchLib                   = require("util/SearchLib")
 local zones                       = require("playermat/Zones")
 
+-- Convenience function to look up closest mat object's color.
+-- Uses helper's bottom left corner of (going from center can get wrong mat)
+local function getMatColor()
+  return playermatApi.getMatColorByPosition(getBottomLeftCorner(self))
+end
+
 local description = "Uses Investigator stats + bonuses to set your Investigator Skill Tracker numbers.\n\nSee context menu for additional options."
 
 local buttonParameters = { -- for the 4 buttons
@@ -108,8 +114,10 @@ function updateStats(newStats)
   end
 end
 
+-- update investigator's Skill Tracker to include bonuses
 function updateSkillTracker(obj, player_clicker_color, alt_click)
-  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+  -- local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+  local matColor = getMatColor()
 
   local bonuses = self.getVar("stats") -- bonuses from this object
   local modifiers = { 0, 0, 0, 0 } -- modifiers from specific investigators
@@ -151,6 +159,42 @@ function updateSkillTracker(obj, player_clicker_color, alt_click)
 end
 
 
+
+function addResetContextuals()
+  self.addContextMenuItem("Reset to 0s", function() updateStats({ 0, 0, 0, 0 }) end)
+  self.addContextMenuItem("Set to -1s", function() updateStats({ -1, -1, -1, -1 }) end)
+end
+
+------------------------------
+--- helpers
+------------------------------
+
+-- get hand size accounting that shattered self maxes at 5 regarless of actual card count
+function getHandSize()
+  -- local matColor = playermatApi.getMatColorByPosition(self.getPosition())
+  -- local handSize = tablelength(Player[matColor].getHandObjects())
+  local matColor = getMatColor()
+  local handSize = 0
+  for _ in pairs(Player[matColor].getHandObjects()) do
+    handSize = handSize + 1
+  end
+
+  if playermatApi.getInvestigatorName(matColor) == "Shattered Self" then
+    if handSize > 5 then handSize = 5 end -- Shattered Self maxes at 5
+  end
+  return handSize
+end
+
+-- -- to help counting hand size
+-- function tablelength(T)
+--   local count = 0
+--   -- for _ in pairs(T) do count = count + 1 end
+--   for _ in pairs(T) do
+--     count = count + 1
+--   end
+--   return count
+-- end
+
 function getInvestigatorStats()
   local matColor = playermatApi.getMatColorByPosition(self.getPosition())
   local pos = zones.getZonePosition(matColor, "Investigator")
@@ -169,23 +213,31 @@ function getInvestigatorStats()
   return investigatorStats
 end
 
-function getHandSize()
-  local matColor = playermatApi.getMatColorByPosition(self.getPosition())
-  local handSize = tablelength(Player[matColor].getHandObjects())
-  if playermatApi.getInvestigatorName(matColor) == "Shattered Self" then
-    if handSize > 5 then handSize = 5 end -- Shattered Self maxes at 5
-  end
-  return handSize
-end
+-- get bottom left corner of object
+function getBottomLeftCorner(object)
+  local pos = object.getPosition()
+  local bounds = object.getBoundsNormalized() -- these don't change with rotation
+  local right = bounds.size.x / 2
+  local forward = bounds.size.z / 2
+  
+  local transForward = object.getTransformForward()
+  local transRight = object.getTransformRight()
+  -- forward
+  local newPos = { 
+    x = pos.x + transForward.x * forward,
+    y = pos.y + transForward.y * forward,
+    z = pos.z + transForward.z * forward,
+  }
+  -- right
+  newPos = { 
+    x = newPos.x + transRight.x * right,
+    y = newPos.y + transRight.y * right,
+    z = newPos.z + transRight.z * right,
+  }
+  
+  local pingPlayer = Player.getPlayers()[1]
+  pingPlayer.pingTable(pos)
+  pingPlayer.pingTable(newPos)
 
--- to help counting hand size
-function tablelength(T)
-  local count = 0
-  for _ in pairs(T) do count = count + 1 end
-  return count
-end
-
-function addResetContextuals()
-  self.addContextMenuItem("Reset to 0s", function() updateStats({ 0, 0, 0, 0 }) end)
-  self.addContextMenuItem("Set to -1s", function() updateStats({ -1, -1, -1, -1 }) end)
+  return newPos
 end
